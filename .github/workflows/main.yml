@@ -19,12 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: akhileshns/heroku-deploy@v3.8.8 # This is the action
-
-      - name: Configure Heroku Credentials
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-      - name: Deploy
-        run: |
+          heroku_app_name: "bdb-2021"
+          heroku_email: "mrkaye97@gmail.com"
+          justlogin: true
+      - run: |
           heroku container:login
           heroku container:push web -a bdb-2021
           heroku container:release web -a bdb-2021
