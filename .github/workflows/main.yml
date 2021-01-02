@@ -23,6 +23,7 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: "bdb-2021"
           heroku_email: "mrkaye97@gmail.com"
+          justlogin: false
       - run: |
           heroku container:login
           heroku container:push web -a bdb-2021
