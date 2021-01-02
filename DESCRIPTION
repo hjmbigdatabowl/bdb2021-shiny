@@ -1,13 +1,9 @@
 Package: bdb2021shiny
-Title: An Amazing Shiny App
+Title: bdb2021shiny
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "firstname",
-           family = "lastname",
-           role = c("aut", "cre"),
-           email = "your@email.com")
-Description: What the package does (one paragraph).
-License: What license is it under?
+Authors@R: person('Matt', 'Kaye', email = 'mrkaye97@gmail.com', role = c('cre', 'aut'))
+Description: A Shiny app for sharing our 2021 NFL Big Data Bowl submission.
+License: MIT + file LICENSE
 Imports: 
     config,
     golem,
@@ -15,3 +11,5 @@ Imports:
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
+URL: https://github.com/hjmbigdatabowl/bdb2021-shiny
+BugReports: https://github.com/hjmbigdatabowl/bdb2021-shiny/issues
