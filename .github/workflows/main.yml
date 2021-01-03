@@ -16,14 +16,13 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: "bdb-2021"
           heroku_email: "mrkaye97@gmail.com"
-          justlogin: true      
+          justlogin: true  
+        env: 
+          HD_ENVIRONMENT: ${{secrets.ENVIRONMENT}}
+          HD_ENCRYPTION_KEY: ${{secrets.ENCRYPTION_KEY}}
+          HD_NONCE: ${{secrets.NONCE}}
       - name: Deploy
-        env:
-          ENVIRONMENT: ${{secrets.ENVIRONMENT}}
-          ENCRYPTION_KEY: ${{secrets.ENCRYPTION_KEY}}
-          NONCE: ${{secrets.NONCE}}
         run: |
           heroku container:login
-          heroku config:set -a bdb-2021 ENVIRONMENT=${{secrets.ENVIRONMENT}} ENCRYPTION_KEY=${{secrets.ENCRYPTION_KEY}} NONCE=${{secrets.NONCE}}
           heroku container:push web -a bdb-2021
           heroku container:release web -a bdb-2021
