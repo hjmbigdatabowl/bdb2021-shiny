@@ -9,9 +9,21 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # List the first level UI elements here
-    fluidPage(
-      h1("bdb2021shiny"),
-      p("Hello world")
+    navbarPage(
+
+      shinyWidgets::setBackgroundColor(
+        color = "ghostwhite",
+        gradient = c("linear", "radial"),
+        direction = c("bottom", "top", "right", "left"),
+        shinydashboard = FALSE
+      ),
+
+      # App title
+      tabPanel('Catch Probs',
+               mod_catch_prob_ui("catch_prob_ui_1")) #,
+      # tabPanel('School Recs',
+      #          mod_school_recs_ui("school_recs_ui_1"))
+
     )
   )
 }

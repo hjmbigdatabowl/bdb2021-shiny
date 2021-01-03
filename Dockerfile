@@ -1,5 +1,8 @@
 FROM collegevine/r-prod-base
 
+RUN Rscript -e "remotes::install_version('gt', version = '0.2.2')" && \
+  Rscript -e "remotes::install_version('cyphr', version = '1.1.0')"
+
 RUN mkdir /build_zone
 ADD . /build_zone
 WORKDIR /build_zone
