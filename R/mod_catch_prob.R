@@ -103,8 +103,9 @@ mod_catch_prob_server <- function(id) {
             showNotification('You must select an render type', duration = 5, type = 'error')
           }
 
-          removeUI('#tab *')
-          removeUI('#gg *')
+          output$gg <- NULL
+          output$tab <- NULL
+
           removeUI('#xaxis *')
           removeUI('#yaxis *')
           removeUI('#plottype *')
@@ -161,6 +162,7 @@ mod_catch_prob_server <- function(id) {
 
       rendered_out <- observeEvent(input$render, {
         tryCatch({
+
           if (model_data[['rendertype']] == 'Plot') {
             col <- if (input$plotcolor == 'None') NULL else input$plotcolor
 
