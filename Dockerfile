@@ -1,5 +1,7 @@
 FROM collegevine/r-prod-base
 
+RUN apt-get update && apt-get install -y  git-core libsodium-dev && rm -rf /var/lib/apt/lists/*
+
 RUN Rscript -e "remotes::install_version('gt', version = '0.2.2')" && \
   Rscript -e "remotes::install_version('cyphr', version = '1.1.0')"
 
