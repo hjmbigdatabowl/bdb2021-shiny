@@ -162,8 +162,8 @@ mod_catch_prob_server <- function(id) {
       rendered_out <- observeEvent(input$render, {
         tryCatch({
           if (model_data[['rendertype']] == 'Plot') {
-            message('got to plot making')
             col <- if (input$plotcolor == 'None') NULL else input$plotcolor
+
             ptype <- function(pt) {
               if (pt == 'Boxplot') {
                 ggplot2::geom_boxplot()
@@ -172,12 +172,11 @@ mod_catch_prob_server <- function(id) {
               }
             }
             plt <- ggplot2::ggplot(model_data[['data']], ggplot2::aes_string(x = input$xaxis, y = input$yaxis, color = col)) +
-              ptype(pt) +
+              ptype(input$plottype) +
               ggthemes::theme_fivethirtyeight() +
               ggplot2::theme(axis.title = ggplot2::element_text())
 
             output$gg <- renderPlot(plt)
-            message('made plot')
 
           } else {
             tab <- model_data[['data']] %>%
