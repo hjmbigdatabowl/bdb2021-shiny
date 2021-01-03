@@ -10,7 +10,6 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # List the first level UI elements here
     navbarPage(
-
       shinyWidgets::setBackgroundColor(
         color = "ghostwhite",
         gradient = c("linear", "radial"),
@@ -19,15 +18,18 @@ app_ui <- function(request) {
       ),
 
       # App title
-      tabPanel('Throw Defending',
-               mod_catch_prob_ui("catch_prob_ui_1")),
-      tabPanel('Throw Deterrence',
-               ## add module here
-               ),
-      tabPanel('Player Cards',
-               ## add module here
-               )
-
+      tabPanel(
+        "Throw Defending",
+        mod_catch_prob_ui("catch_prob_ui_1")
+      ),
+      tabPanel(
+        "Throw Deterrence",
+        ## add module here
+      ),
+      tabPanel(
+        "Player Cards",
+        ## add module here
+      )
     )
   )
 }
@@ -40,20 +42,18 @@ app_ui <- function(request) {
 #' @import shiny
 #' @importFrom golem add_resource_path activate_js favicon bundle_resources
 #' @noRd
-golem_add_external_resources <- function(){
-
+golem_add_external_resources <- function() {
   add_resource_path(
-    'www', app_sys('app/www')
+    "www", app_sys("app/www")
   )
 
   tags$head(
     favicon(),
     bundle_resources(
-      path = app_sys('app/www'),
-      app_title = 'bdb2021shiny'
+      path = app_sys("app/www"),
+      app_title = "bdb2021shiny"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
   )
 }
-
