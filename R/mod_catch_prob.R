@@ -8,7 +8,7 @@
 #'
 #' @importFrom shiny NS tagList
 `%>%` <- magrittr::`%>%`
-load('inst/data/sodium_key.Rdata')
+load('model_data/sodium_key.Rdata')
 key <- cyphr::key_sodium(k)
 
 load_encrypted <- function(file, key) {
@@ -73,11 +73,11 @@ mod_catch_prob_server <- function(id) {
           }
 
           if (input$mod == 'Target Model') {
-            load_encrypted('inst/data/catch_prob_features.Rdata', key)
+            load_encrypted('model_data/catch_prob_features.Rdata', key)
             ## add more loads
           } else {
             ## change this
-            load_encrypted('inst/data/catch_prob_features.Rdata', key)
+            load_encrypted('model_data/catch_prob_features.Rdata', key)
             ## add more loads
           }
 
