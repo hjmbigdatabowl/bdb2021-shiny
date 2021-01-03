@@ -24,6 +24,6 @@ jobs:
           NONCE: ${{secrets.NONCE}}
         run: |
           heroku container:login
-          heroku config:set -a bdb-2021 ENVIRONMENT=${ENVIRONMENT} ENCRYPTION_KEY=${ENCRYPTION_KEY} NONCE=${NONCE}
+          heroku config:set -a bdb-2021 ENVIRONMENT=${{secrets.ENVIRONMENT}} ENCRYPTION_KEY=${{secrets.ENCRYPTION_KEY}} NONCE=${{secrets.NONCE}}
           heroku container:push web -a bdb-2021
           heroku container:release web -a bdb-2021
