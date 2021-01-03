@@ -18,11 +18,11 @@ jobs:
           heroku_email: "mrkaye97@gmail.com"
           justlogin: true      
       - name: Deploy
-        with:
+        env:
           ENVIRONMENT: ${{secrets.ENVIRONMENT}}
           ENCRYPTION_KEY: ${{secrets.ENCRYPTION_KEY}}
           NONCE: ${{secrets.NONCE}}
-      - run: |
+        run: |
           heroku container:login
           heroku container:push web -a bdb-2021
           heroku container:release web -a bdb-2021
