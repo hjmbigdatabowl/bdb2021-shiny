@@ -62,6 +62,7 @@ mod_catch_prob_server <- function(id) {
   moduleServer(
     id,
     function(input, output, session){
+      df <- NULL
       ns <- session$ns
 
       model_data <- reactiveValues()
