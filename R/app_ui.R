@@ -19,10 +19,14 @@ app_ui <- function(request) {
       ),
 
       # App title
-      tabPanel('Catch Probs',
-               mod_catch_prob_ui("catch_prob_ui_1")) #,
-      # tabPanel('School Recs',
-      #          mod_school_recs_ui("school_recs_ui_1"))
+      tabPanel('Throw Defending',
+               mod_catch_prob_ui("catch_prob_ui_1")),
+      tabPanel('Throw Deterrence',
+               ## add module here
+               ),
+      tabPanel('Player Cards',
+               ## add module here
+               )
 
     )
   )
