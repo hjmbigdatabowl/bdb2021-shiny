@@ -88,6 +88,7 @@ mod_catch_prob_server <- function(id) {
           showNotification("The model loaded!", duration = 3, type = "message")
         },
         error = function(err){
+          message(err)
           showNotification('You must select a model to load', type = 'error', duration = 5)
         })
       })
@@ -109,6 +110,7 @@ mod_catch_prob_server <- function(id) {
           output$featuretab <- DT::renderDataTable(tab)
         },
         error = function(err){
+          message(err)
           showNotification(paste0("Error message: ", err), type = 'err')
         })
 
