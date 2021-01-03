@@ -16,6 +16,9 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: "bdb-2021"
           heroku_email: "mrkaye97@gmail.com"
+          ENVIRONMENT: ${{secrets.ENVIRONMENT}}
+          ENCRYPTION_KEY: ${{secrets.ENCRYPTION_KEY}}
+          NONCE: ${{secrets.NONCE}}
           justlogin: true
       - run: |
           heroku container:login
