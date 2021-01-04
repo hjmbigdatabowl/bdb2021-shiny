@@ -202,8 +202,10 @@ get_team_logo <- function(team_abbr) {
     dplyr::pull(.data$team_logo_espn)
 
   logo <- cowplot::draw_image(team_logo)
+  logo_geom <- cowplot::ggdraw() + logo
+  rm(logo)
 
-  return(cowplot::ggdraw() + logo)
+  return(logo_geom)
 }
 
 #' build_player_bio function to create a ggplot object for a players bio information
