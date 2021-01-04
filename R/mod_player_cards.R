@@ -154,7 +154,12 @@ build_player_card <- function(df, player_id) {
   BBBBBC
   "
 
-  return(player_bio_geom + radar_geom + percentile_goem + team_logo + plot_layout(design = plot_layot))
+  return(player_bio_geom
+         + radar_geom
+         + percentile_goem
+         + team_logo
+         + plot_layout(design = plot_layot)
+         + plot_annotation(caption="Inspired by player cards from evolving-hockey.com; data courtesy NFL"))
 }
 
 #' build_percentile_geom take the player grade percentiles and build a geom to display ratings boxes
@@ -196,7 +201,7 @@ get_team_logo <- function(team_abbr) {
     dplyr::filter(.data$team_abbr == team_abbr) %>%
     dplyr::pull(.data$team_logo_espn)
 
-  logo <- cowplot::draw_image("https://a.espncdn.com/i/teamlogos/nfl/500/lar.png")
+  logo <- cowplot::draw_image(team_logo)
 
   return(cowplot::ggdraw() + logo)
 }
