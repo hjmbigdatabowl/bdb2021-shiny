@@ -93,11 +93,13 @@ load_player_card_data <- function(){
   rm(results)
 
   target_agg <- bdb2021::load_encrypted("model_data/target_aggregated.Rdata")
+  speed_dat <- bdb2021::load_encrypted("model_data/speed_summary.Rdata")
 
   df <- target_agg %>%
     dplyr::left_join(catch_agg %>% dplyr::select(.data$nflId, .data$plays, .data$drops_added),
                      by = "nflId",
                      suffix = c("Target", "Drop")) %>%
+    dplyr::left_join(speed_dat %>% dplyr::select(-.data$plays), by="nflId") %>%
     dplyr::mutate(regressedDrops = .data$drops_added / .data$playsDrop,
                   dropdownName = paste(.data$position, " ", .data$displayName, " (", .data$defendingTeam, ")", sep=""))
 
@@ -112,6 +114,7 @@ load_player_card_data <- function(){
                      sdDrops = sd(regressedDrops))
 
   df <- df %>%
+    dplyr::filter(.data$playsTarget > 50) %>%
     dplyr::inner_join(summary_stats, by="position") %>%
     dplyr::mutate(
       coverageZ = (regressedCoverage - meanCoverage) / sdCoverage,
@@ -141,16 +144,17 @@ build_player_card <- function(df, player_id) {
   player_bio_geom <- build_player_bio(player_row)
   radar_geom <- build_player_radar(df, player_id)
   percentile_goem <- build_percentile_geom(player_row)
+  team_logo <- get_team_logo(player_row %>% dplyr::pull(.data$defendingTeam))
 
   plot_layot <- "
-  AAAAC
-  BBBBC
-  BBBBC
-  BBBBC
-  BBBBC
+  DAAA#C
+  BBBBBC
+  BBBBBC
+  BBBBBC
+  BBBBBC
   "
 
-  return(player_bio_geom + radar_geom + percentile_goem + plot_layout(design = plot_layot))
+  return(player_bio_geom + radar_geom + percentile_goem + team_logo + plot_layout(design = plot_layot))
 }
 
 #' build_percentile_geom take the player grade percentiles and build a geom to display ratings boxes
@@ -185,6 +189,18 @@ build_rating_box <- function(rating, label) {
 
 }
 
+#' get_team_logo get logo from nflfastR
+#'
+get_team_logo <- function(team_abbr) {
+  team_logo <- nflfastR::teams_colors_logos %>%
+    dplyr::filter(.data$team_abbr == team_abbr) %>%
+    dplyr::pull(.data$team_logo_espn)
+
+  logo <- cowplot::draw_image("https://a.espncdn.com/i/teamlogos/nfl/500/lar.png")
+
+  return(cowplot::ggdraw() + logo)
+}
+
 #' build_player_bio function to create a ggplot object for a players bio information
 #'
 #' @param player_row record in total data with players information
@@ -196,10 +212,11 @@ build_player_bio <- function(player_row) {
     ggplot2::scale_fill_gradient2(midpoint = 50, limits=c(0, 100)) +
     ggplot2::theme_void() +
     ggplot2::theme(legend.position = "none") +
-    ggplot2::geom_text(ggplot2::aes(x = 1, y = 1.5, label = paste(position, "-", defendingTeam)), size=6) +
-    ggplot2::geom_text(ggplot2::aes(x = 1, y = 1, label = displayName), size=6) +
-    ggplot2::geom_text(ggplot2::aes(x = 1, y = 0.5, label = paste(round(playsTarget), " plays | ", games, " games", sep="")), size=6)
-
+    # ggplot2::geom_text(ggplot2::aes(x = 1, y = 1.5, label = paste(position, "-", defendingTeam)), size=6) +
+    # ggplot2::geom_text(ggplot2::aes(x = 1, y = 1, label = displayName), size=6) +
+    # ggplot2::geom_text(ggplot2::aes(x = 1, y = 0.5, label = paste(round(playsTarget), " plays | ", games, " games", sep="")), size=6)
+    ggplot2::geom_text(ggplot2::aes(x = 1, y = 1.3, label = paste(position, displayName)), size=8) +
+    ggplot2::geom_text(ggplot2::aes(x = 1, y = 0.7, label = paste(round(playsTarget), " plays | ", games, " games", sep="")), size=6)
 }
 
 #' build_player_radar
@@ -210,14 +227,18 @@ build_player_bio <- function(player_row) {
 build_player_radar <- function(df, player_id) {
   radar_geom <- df %>%
     dplyr::mutate_each(list(scales::rescale),
-                       c(.data$playsTarget, .data$coverageTargetsAdded, .data$deterrenceTargetsAdded, .data$drops_added)) %>%
+                       c(.data$playsTarget, .data$averageSeperation, .data$wrStrength, .data$medianSpeed, .data$medianAccel)) %>%
+    dplyr::mutate(wrStrength = 1 - .data$wrStrength,
+                  averageSeperation = 1 - .data$averageSeperation) %>%
     dplyr::filter(.data$nflId == player_id) %>%
     dplyr::select(.data$nflId,
-                  plays = .data$playsTarget,
-                  coverage = .data$coverageTargetsAdded,
-                  deterrence = .data$deterrenceTargetsAdded,
-                  drops = .data$drops_added) %>%
-    ggradar::ggradar()
+                  Plays = .data$playsTarget,
+                  Speed = .data$medianSpeed,
+                  Accel = .data$medianAccel,
+                  `Asmgt Diff` = .data$wrStrength,
+                  `WR Sep` = .data$averageSeperation) %>%
+    ggradar::ggradar() +
+    ggplot2::theme(plot.margin = ggplot2::margin(0, 0, 0, 0))
 
   return(radar_geom)
 }
