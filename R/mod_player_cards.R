@@ -8,7 +8,6 @@
 #'
 #' @importFrom shiny NS tagList
 `%>%` <- magrittr::`%>%`
-df <- load_player_card_data()
 
 mod_player_card_ui <- function(id){
   ns <- NS(id)
@@ -30,30 +29,16 @@ mod_player_card_ui <- function(id){
                   max-width: 450px;}")
           )
         ),
-        shinyWidgets::pickerInput(NS(id, "playerid"),
-                                  label = "Output",
-                                  choices = sorted(df$dropdownName),
+        shinyWidgets::pickerInput(NS(id, "playerDropdown"),
+                                  label = "Players",
+                                  choices = c(),
                                   multiple = TRUE,
-                                  options = shinyWidgets::pickerOptions(maxOptions = 1)
+                                  options = shinyWidgets::pickerOptions(maxOptions = 1, liveSearch = T)
         ),
-
-        actionButton(NS(id, "loadmodel"), label = "Load model", width = "100%", style = "margin-bottom:10px"),
-        shinyWidgets::pickerInput(NS(id, "rendertype"),
-                                  label = "Render",
-                                  choices = c("Plot", "Table"),
-                                  multiple = TRUE,
-                                  options = shinyWidgets::pickerOptions(maxOptions = 1)
-        ),
-        actionButton(NS(id, "selectrender"), label = "Finalize Selection", width = "100%", style = "margin-bottom:10px"),
-        uiOutput("xaxis"),
-        uiOutput("yaxis"),
-        uiOutput("plottype"),
-        uiOutput("plotcolor"),
-        uiOutput("variables"),
-        actionButton(NS(id, "render"), "Render", width = "100%", style = "margin-bottom:10px")
+        actionButton(NS(id, "selectrender"), label = "Select Player", width = "100%", style = "margin-bottom:10px"),
+        # uiOutput("playerDropdown")
       ),
       mainPanel(
-        DT::dataTableOutput(ns("tab")),
         plotOutput(ns("gg"))
       )
     )
@@ -67,8 +52,29 @@ mod_player_card_server <- function(id){
     id,
     function(input, output, session){
       ns <- session$ns
+      df <- load_player_card_data()
+      shinyWidgets::updatePickerInput(session, "playerDropdown", choices = df$dropdownName, label = "Players")
 
-      shinyWidgets::updatePickerInput(session, "cols_to_select", choices = sort(colnames(df)), label = "Variables")
+      data <- reactiveValues()
+
+      observeEvent(input$selectrender, {
+        tryCatch(
+          {
+            if (is.na(input$playerDropdown)) {
+              showNotification("You must select a player", duration = 5, type = "error")
+            }
+
+            data[["playerId"]] <- df %>% dplyr::filter(.data$dropdownName == input$playerDropdown) %>% dplyr::pull(nflId)
+
+            plt <- build_player_card(df, data[["playerId"]])
+            output$gg <- renderPlot(plt)
+          },
+          error = function(err) {
+            message(err)
+            showNotification("You must select a type of output to render", type = "error", duration = 5)
+          }
+        )
+      })
     }
   )
 }
