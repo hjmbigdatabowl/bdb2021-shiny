@@ -28,7 +28,7 @@ app_ui <- function(request) {
       ),
       tabPanel(
         "Player Cards",
-        ## add module here
+        mod_player_card_ui("player_card_ui_1")
       )
     )
   )
