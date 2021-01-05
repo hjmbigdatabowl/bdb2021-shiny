@@ -66,9 +66,7 @@ mod_player_card_server <- function(id){
             data[["playerId"]] <- df %>% dplyr::filter(.data$dropdownName == input$playerDropdown) %>% dplyr::pull(nflId)
 
             plt <- build_player_card(df, data[["playerId"]])
-            message('got through building card')
             output$gg <- renderPlot(plt)
-            message('got through plot render')
           },
           error = function(err) {
             message(err)
@@ -166,13 +164,9 @@ build_player_card <- function(df, player_id) {
   player_row <- df %>% dplyr::filter(player_id == .data$nflId)
 
   player_bio_geom <- build_player_bio(player_row)
-  message('got through build player bio')
   radar_geom <- build_player_radar(df, player_id)
-  message('got through radar geom')
   percentile_goem <- build_percentile_geom(player_row)
-  message('got through percentile geom')
   team_logo <- get_team_logo(player_row %>% dplyr::pull(.data$defendingTeam))
-  message('got through logo geom')
 
   plot_layot <- "
   DAAA#C
@@ -181,8 +175,6 @@ build_player_card <- function(df, player_id) {
   BBBBBC
   BBBBBC
   "
-
-  message('got through build_player_card()')
 
   return(player_bio_geom
          + radar_geom
@@ -205,7 +197,6 @@ build_percentile_geom <- function(player_row){
   drops_arrival_grade_geom <- build_rating_box(player_row %>% dplyr::pull(dropsArrivalGrade), "Breakups")
   drops_throw_grade_geom <- build_rating_box(player_row %>% dplyr::pull(dropsThrowGrade), "Closing")
 
-  message('got through build_percentile_geom')
   return(total_grade_geom + coverage_grade_geom + deterrence_grade_geom + drops_throw_grade_geom + drops_arrival_grade_geom + plot_layout(ncol=1))
 }
 
@@ -257,7 +248,6 @@ build_player_bio <- function(player_row) {
     ggplot2::geom_text(ggplot2::aes(x = 1, y = 1.3, label = paste(position, displayName)), size=8) +
     ggplot2::geom_text(ggplot2::aes(x = 1, y = 0.7, label = paste(round(plays_throw), " plays | ", games, " games", sep="")), size=6)
 
-  message("got through build_player_bio()")
   return(bio_geom)
 }
 
@@ -282,6 +272,5 @@ build_player_radar <- function(df, player_id) {
     ggradar::ggradar() +
     ggplot2::theme(plot.margin = ggplot2::margin(0, 0, 0, 0))
 
-  message("got through build_player_radar()")
   return(radar_geom)
 }
