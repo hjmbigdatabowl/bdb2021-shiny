@@ -66,7 +66,9 @@ mod_player_card_server <- function(id){
             data[["playerId"]] <- df %>% dplyr::filter(.data$dropdownName == input$playerDropdown) %>% dplyr::pull(nflId)
 
             plt <- build_player_card(df, data[["playerId"]])
+            message('got through building card')
             output$gg <- renderPlot(plt)
+            message('got through plot render')
           },
           error = function(err) {
             message(err)
@@ -88,13 +90,11 @@ load_player_card_data <- function(){
 
   catch_throw_agg <- engine %>%
     dplyr::tbl('drops_added_throw') %>%
-#   dplyr::filter(position %in% c('CB', 'FS', 'SS', 'S', 'DB')) %>%
     dplyr::rename(plays_throw = plays) %>%
     dplyr::collect()
 
   catch_arrival_agg <- engine %>%
     dplyr::tbl('drops_added_arrival') %>%
-#    dplyr::filter(position %in% c('CB', 'FS', 'SS', 'S', 'DB')) %>%
     dplyr::rename(plays_arrival = plays) %>%
     dplyr::collect()
 
@@ -107,7 +107,6 @@ load_player_card_data <- function(){
     dplyr::tbl('speed_summary') %>%
     dplyr::collect() %>%
     dplyr::select(-.data$plays)
-
 
   df <- target_agg %>%
     dplyr::filter(plays > 50) %>%
@@ -147,7 +146,8 @@ load_player_card_data <- function(){
       totalGrade = (.data$coverageGrade + .data$deterrenceGrade + .data$dropsThrowGrade + .data$dropsArrivalGrade) / 4,
       totalGrade = 100 * pnorm((.data$totalGrade - mean(.data$totalGrade, na.rm = T)) / sd(.data$totalGrade, na.rm = T))
     ) %>%
-    dplyr::select(-(meanCoverage:sdDropsArrival))
+    dplyr::select(-(meanCoverage:sdDropsArrival)) %>%
+    dplyr::filter(plays > 200, position == "DB")
 
   rm(summary_stats)
   return(df)
@@ -164,9 +164,13 @@ build_player_card <- function(df, player_id) {
   player_row <- df %>% dplyr::filter(player_id == .data$nflId)
 
   player_bio_geom <- build_player_bio(player_row)
+  message('got through build player bio')
   radar_geom <- build_player_radar(df, player_id)
+  message('got through radar geom')
   percentile_goem <- build_percentile_geom(player_row)
+  message('got through percentile geom')
   team_logo <- get_team_logo(player_row %>% dplyr::pull(.data$defendingTeam))
+  message('got through logo geom')
 
   plot_layot <- "
   DAAA#C
@@ -175,6 +179,8 @@ build_player_card <- function(df, player_id) {
   BBBBBC
   BBBBBC
   "
+
+  message('got through build_player_card()')
 
   return(player_bio_geom
          + radar_geom
@@ -272,5 +278,6 @@ build_player_radar <- function(df, player_id) {
     ggradar::ggradar() +
     ggplot2::theme(plot.margin = ggplot2::margin(0, 0, 0, 0))
 
+  message("got through build_player_radar()")
   return(radar_geom)
 }

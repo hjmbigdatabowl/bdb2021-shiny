@@ -29,6 +29,10 @@ app_ui <- function(request) {
       tabPanel(
         "Player Cards",
         mod_player_card_ui("player_card_ui_1")
+      ),
+      tabPanel(
+        'Overall Rankings',
+        mod_overall_rankings_ui('overall_rankings_ui_1')
       )
     )
   )

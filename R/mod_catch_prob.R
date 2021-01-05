@@ -31,7 +31,7 @@ mod_catch_prob_ui <- function(id) {
         ),
         shinyWidgets::pickerInput(NS(id, "outtype"),
           label = "Output",
-          choices = c("Rankings", "Features"),
+          choices = c("Closing Rankings", "Pass Breakup Rankings", "Features"),
           multiple = TRUE,
           options = shinyWidgets::pickerOptions(maxOptions = 1)
         ),
@@ -66,11 +66,10 @@ mod_catch_prob_server <- function(id) {
   moduleServer(
     id,
     function(input, output, session) {
-      df <- NULL
       ns <- session$ns
 
       model_data <- reactiveValues()
-
+      engine <- bdb2021::connect_to_heroku_postgres()
       observeEvent(input$loadmodel, {
         tryCatch(
           {
@@ -78,44 +77,24 @@ mod_catch_prob_server <- function(id) {
               showNotification("You must select an output type", duration = 5, type = "error")
             }
 
-            if (input$outtype == "Rankings") {
-              load("model_data/drops_added.Rdata")
-              df <- results %>%
-                dplyr::arrange(dplyr::desc(drops_added))
-              rm(results)
+            if (input$outtype == "Closing Rankings") {
+              model_data[["data"]] <- engine %>%
+                dplyr::tbl('drops_added_throw') %>%
+                dplyr::filter(position %in% c('CB', 'FS', 'SS', 'S', 'DB')) %>%
+                dplyr::collect()
+            } else if (input$outtype == 'Pass Breakup Rankings') {
+              model_data[["data"]] <- engine %>%
+                dplyr::tbl('drops_added_arrival') %>%
+                dplyr::filter(position %in% c('CB', 'FS', 'SS', 'S', 'DB')) %>%
+                dplyr::collect()
             } else {
-              ## change this
-              load("model_data/catch_prob_preds.Rdata")
-              df <- bdb2021::load_encrypted("model_data/catch_prob_features.Rdata") %>%
-                dplyr::mutate(dplyr::across(dplyr::everything(), function(x) ifelse(x == 999, NA_real_, x))) %>%
-                dplyr::rowwise() %>%
-                dplyr::transmute(
-                  gameId = gameId,
-                  playId = playId,
-                  avg_dist_to_defs = mean(dplyr::c_across(dist_to_def_1:dist_to_def_11), na.rm = T),
-                  min_dist_to_nearest_def = min(dplyr::c_across(dist_to_def_1:dist_to_def_11), na.rm = T),
-                  defs_within_five_yards = sum(dplyr::c_across(dist_to_def_1:dist_to_def_11) <= 5, na.rm = T),
-                  throw_distance = throwdist,
-                  throw_velocity = max_throw_velo,
-                  receiver_height = height,
-                  receiver_skill = skill,
-                  conditions = conditions,
-                  temperature = temperature,
-                  football_y_position_at_pass_arrival = footballYArr,
-                  football_x_position_at_pass_arrival = footballXArr,
-                  target_x_position_at_throw = targetXThrow,
-                  target_y_position_at_throw = targetYThrow,
-                  target_speed_at_throw = targetSThrow,
-                  target_acceleration_at_throw = targetAThrow,
-                  outcome = outcome
-                ) %>%
-                dplyr::ungroup() %>%
-                dplyr::left_join(model_preds %>% dplyr::rename(catch_probability = predprob), by = c("gameId", "playId"))
+              model_data[["data"]] <- engine %>%
+                dplyr::tbl('aggregated_catch_prob_features') %>%
+                dplyr::collect()
               ## add more loads
             }
 
-            shinyWidgets::updatePickerInput(session, "cols_to_select", choices = sort(colnames(df)), label = "Variables")
-            model_data[["data"]] <- df
+            shinyWidgets::updatePickerInput(session, "cols_to_select", choices = sort(colnames(model_data[['data']])), label = "Variables")
             ## add more model data
 
             showNotification("The model loaded!", duration = 3, type = "message")
@@ -201,7 +180,7 @@ mod_catch_prob_server <- function(id) {
                 if (pt == "Boxplot") {
                   ggplot2::geom_boxplot()
                 } else if (pt == "Scatter") {
-                  ggplot2::geom_point()
+                  ggplot2::geom_jitter()
                 }
               }
               plt <- ggplot2::ggplot(model_data[["data"]], ggplot2::aes_string(x = input$xaxis, y = input$yaxis, color = col)) +
