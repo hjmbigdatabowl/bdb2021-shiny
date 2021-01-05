@@ -141,7 +141,8 @@ load_player_card_data <- function(){
       totalGrade = (.data$coverageGrade + .data$deterrenceGrade + .data$dropsThrowGrade + .data$dropsArrivalGrade) / 4,
       totalGrade = 100 * pnorm((.data$totalGrade - mean(.data$totalGrade, na.rm = T)) / sd(.data$totalGrade, na.rm = T))
     ) %>%
-    dplyr::select(-(meanCoverage:sdDropsArrival))
+    dplyr::select(-(meanCoverage:sdDropsArrival)) %>%
+    dplyr::filter(plays > 200, position %in% c('DB', 'CB', 'SS', 'FS', 'S'))
 
   rm(summary_stats)
   return(df)
