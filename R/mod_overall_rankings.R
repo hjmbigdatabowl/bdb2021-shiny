@@ -157,7 +157,8 @@ mod_overall_rankings_server <- function(id){
               output$gg <- renderPlot(plt)
             } else {
               tab <- model_data_2[["data"]] %>%
-                dplyr::select(input$cols_to_select2)
+                dplyr::select(input$cols_to_select2) %>%
+                dplyr::mutate(dplyr::across(dplyr::ends_with('Grade'), function(x) round(x, digits = 0)))
 
               output$tab <- DT::renderDataTable(tab)
               shinyjs::hide('gg')
