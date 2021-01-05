@@ -7,3 +7,4 @@
 .DS_Store
 data/sodium_key.Rdata
 inst/keys/sodium_key.Rdata
+inst/keys/creds.json
