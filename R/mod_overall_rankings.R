@@ -29,18 +29,18 @@ mod_overall_rankings_ui <- function(id){
                   max-width: 450px;}")
           )
         ),
-        shinyWidgets::pickerInput(NS(id, "rendertype"),
+        shinyWidgets::pickerInput(NS(id, "rendertype2"),
                                   label = "What to Render",
                                   choices = c('Plot', 'Table'),
                                   multiple = TRUE,
                                   options = shinyWidgets::pickerOptions(maxOptions = 1, liveSearch = T)
         ),
-        actionButton(NS(id, 'select'), 'Confirm', width = '100%', style = 'margin-bottom:10px'),
-        uiOutput("xaxis"),
-        uiOutput("yaxis"),
-        uiOutput("plottype"),
-        uiOutput("plotcolor"),
-        uiOutput("variables"),
+        actionButton(NS(id, 'select2'), 'Confirm', width = '100%', style = 'margin-bottom:10px'),
+        uiOutput("xaxis2"),
+        uiOutput("yaxis2"),
+        uiOutput("plottype2"),
+        uiOutput("plotcolor2"),
+        uiOutput("variables2"),
         actionButton(NS(id, "render"), "Render", width = "100%", style = "margin-bottom:10px")
       ),
       mainPanel(
@@ -54,64 +54,67 @@ mod_overall_rankings_ui <- function(id){
 #'
 #' @noRd
 mod_overall_rankings_server <- function(id){
+  message('got inside server')
   moduleServer(
     id,
     function(input, output, session){
       message('server started')
       ns <- session$ns
 
-      model_data <- reactiveValues()
+      model_data_2 <- reactiveValues()
       message('data loading...')
-      model_data[['data']] <- load_player_card_data()
+      model_data_2[['data']] <- load_player_card_data()
       message('data loaded')
 
-      observeEvent(input$select, {
+      observeEvent(input$select2, {
         tryCatch(
           {
-            if (is.na(input$rendertype)) {
+            if (is.na(input$rendertype2)) {
               showNotification("You must select something to render", duration = 5, type = "error")
             }
             message('got inside select click')
-            removeUI("#xaxis *")
-            removeUI("#yaxis *")
-            removeUI("#plottype *")
-            removeUI("#plotcolor *")
-            removeUI("#variables *")
-            message(input$rendertype)
-            model_data[["rendertype"]] <- input$rendertype
-
-            if (input$rendertype == "Plot") {
+            removeUI("#xaxis2 *")
+            removeUI("#yaxis2 *")
+            removeUI("#plottype2 *")
+            removeUI("#plotcolor2 *")
+            removeUI("#variables2 *")
+            message(input$rendertype2)
+            model_data_2[["rendertype2"]] <- input$rendertype2
+            message('updated reactive')
+            if (input$rendertype2 == "Plot") {
+              message('got to insertUI')
               insertUI(
-                selector = "#xaxis",
+                selector = "#xaxis2",
                 where = "beforeEnd",
-                ui = selectInput(NS(id, "xaxis"), "X-Axis", choices = c("None", colnames(model_data[["data"]]))),
+                ui = selectInput(NS(id, "xaxis2"), "X-Axis", choices = c("None", colnames(model_data_2[["data"]]))),
                 session = session
               )
               insertUI(
-                selector = "#yaxis",
+                selector = "#yaxis2",
                 where = "beforeEnd",
-                ui = selectInput(NS(id, "yaxis"), "Y-Axis", choices = c("None", colnames(model_data[["data"]]))),
+                ui = selectInput(NS(id, "yaxis2"), "Y-Axis", choices = c("None", colnames(model_data_2[["data"]]))),
                 session = session
               )
               insertUI(
-                selector = "#plottype",
+                selector = "#plottype2",
                 where = "beforeEnd",
-                ui = selectInput(NS(id, "plottype"), "Plot Type", choices = c("Boxplot", "Scatter")),
+                ui = selectInput(NS(id, "plottype2"), "Plot Type", choices = c("Boxplot", "Scatter")),
                 session = session
               )
               insertUI(
-                selector = "#plotcolor",
+                selector = "#plotcolor2",
                 where = "beforeEnd",
-                ui = selectInput(NS(id, "plotcolor"), "Color", choices = c("None", colnames(model_data[["data"]]))),
+                ui = selectInput(NS(id, "plotcolor2"), "Color", choices = c("None", colnames(model_data_2[["data"]]))),
                 session = session
               )
+              message('got through UI inserts')
             } else {
               insertUI(
-                selector = "#variables",
+                selector = "#variables2",
                 where = "beforeEnd",
-                ui = shinyWidgets::pickerInput(NS(id, "cols_to_select"),
+                ui = shinyWidgets::pickerInput(NS(id, "cols_to_select2"),
                                                label = "Variables",
-                                               choices = colnames(model_data[["data"]]),
+                                               choices = colnames(model_data_2[["data"]]),
                                                multiple = TRUE,
                                                options = list(
                                                  `actions-box` = TRUE,
@@ -129,12 +132,13 @@ mod_overall_rankings_server <- function(id){
         )
       })
 
-      rendered_out <- observeEvent(input$select, {
+      rendered_out <- observeEvent(input$render, {
         tryCatch(
           {
-            if (model_data[["rendertype"]] == "Plot") {
-              col <- if (input$plotcolor == "None") NULL else input$plotcolor
-
+            message(model_data_2[['rendertype2']])
+            if (model_data_2[["rendertype2"]] == "Plot") {
+              col <- if (input$plotcolor2 == "None") NULL else input$plotcolor2
+              message('got through color')
               ptype <- function(pt) {
                 if (pt == "Boxplot") {
                   ggplot2::geom_boxplot()
@@ -142,18 +146,18 @@ mod_overall_rankings_server <- function(id){
                   ggplot2::geom_jitter()
                 }
               }
-              plt <- ggplot2::ggplot(model_data[["data"]], ggplot2::aes_string(x = input$xaxis, y = input$yaxis, color = col)) +
-                ptype(input$plottype) +
+              plt <- ggplot2::ggplot(model_data_2[["data"]], ggplot2::aes_string(x = input$xaxis2, y = input$yaxis2, color = col)) +
+                ptype(input$plottype2) +
                 ggthemes::theme_fivethirtyeight() +
                 ggplot2::theme(axis.title = ggplot2::element_text())
-
+              message('got through plt')
               shinyjs::hide('tab')
               shinyjs::show('gg')
 
               output$gg <- renderPlot(plt)
             } else {
-              tab <- model_data[["data"]] %>%
-                dplyr::select(input$cols_to_select)
+              tab <- model_data_2[["data"]] %>%
+                dplyr::select(input$cols_to_select2)
 
               output$tab <- DT::renderDataTable(tab)
               shinyjs::hide('gg')
