@@ -31,7 +31,7 @@ mod_catch_prob_ui <- function(id) {
         ),
         shinyWidgets::pickerInput(NS(id, "outtype"),
           label = "Output",
-          choices = c("Rankings", "Features"),
+          choices = c("Closing Rankings", "Pass Breakup Rankings", "Features"),
           multiple = TRUE,
           options = shinyWidgets::pickerOptions(maxOptions = 1)
         ),
@@ -77,12 +77,17 @@ mod_catch_prob_server <- function(id) {
               showNotification("You must select an output type", duration = 5, type = "error")
             }
 
-            if (input$outtype == "Rankings") {
+            if (input$outtype == "Closing Rankings") {
               model_data[["data"]] <- engine %>%
-                dplyr::tbl('drops_added') %>%
+                dplyr::tbl('drops_added_throw') %>%
+                dplyr::filter(position %in% c('CB', 'FS', 'SS', 'S', 'DB')) %>%
+                dplyr::collect()
+            } else if (input$outtype == 'Pass Breakup Rankings') {
+              model_data[["data"]] <- engine %>%
+                dplyr::tbl('drops_added_arrival') %>%
+                dplyr::filter(position %in% c('CB', 'FS', 'SS', 'S', 'DB')) %>%
                 dplyr::collect()
             } else {
-              ## change this
               model_data[["data"]] <- engine %>%
                 dplyr::tbl('aggregated_catch_prob_features') %>%
                 dplyr::collect()

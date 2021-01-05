@@ -63,7 +63,6 @@ mod_player_card_server <- function(id){
             if (is.na(input$playerDropdown)) {
               showNotification("You must select a player", duration = 5, type = "error")
             }
-
             data[["playerId"]] <- df %>% dplyr::filter(.data$dropdownName == input$playerDropdown) %>% dplyr::pull(nflId)
 
             plt <- build_player_card(df, data[["playerId"]])
@@ -85,47 +84,63 @@ mod_player_card_server <- function(id){
 #'
 load_player_card_data <- function(){
   `%>%` <- magrittr::`%>%`
+  engine <- bdb2021::connect_to_heroku_postgres()
 
-  # catch_agg <- bdb2021::load_encrypted("model_data/drops_added.Rdata")
-  catch_agg <- NULL
-  load("model_data/drops_added.Rdata")
-  catch_agg <- results
-  rm(results)
+  catch_throw_agg <- engine %>%
+    dplyr::tbl('drops_added_throw') %>%
+    dplyr::filter(plays > 100) %>%
+#   dplyr::filter(position %in% c('CB', 'FS', 'SS', 'S', 'DB')) %>%
+    dplyr::rename(plays_throw = plays) %>%
+    dplyr::collect()
+
+  catch_arrival_agg <- engine %>%
+    dplyr::tbl('drops_added_arrival') %>%
+    dplyr::filter(plays > 100) %>%
+#    dplyr::filter(position %in% c('CB', 'FS', 'SS', 'S', 'DB')) %>%
+    dplyr::rename(plays_arrival = plays) %>%
+    dplyr::collect()
 
   target_agg <- bdb2021::load_encrypted("model_data/target_aggregated.Rdata")
   speed_dat <- bdb2021::load_encrypted("model_data/speed_summary.Rdata")
 
   df <- target_agg %>%
-    dplyr::left_join(catch_agg %>% dplyr::select(.data$nflId, .data$plays, .data$drops_added),
-                     by = "nflId",
-                     suffix = c("Target", "Drop")) %>%
+    dplyr::filter(plays > 50) %>%
+    dplyr::left_join(catch_throw_agg %>% dplyr::select(.data$nflId, .data$plays_throw, .data$drops_added_throw),
+                     by = "nflId") %>%
+    dplyr::left_join(catch_arrival_agg %>% dplyr::select(.data$nflId, .data$plays_arrival, .data$drops_added_arrival),
+                     by = "nflId") %>%
     dplyr::left_join(speed_dat %>% dplyr::select(-.data$plays), by="nflId") %>%
-    dplyr::mutate(regressedDrops = .data$drops_added / .data$playsDrop,
+    dplyr::mutate(regressedDropsThrow = .data$drops_added_throw / .data$plays_throw,
+                  regressedDropsArrival = .data$drops_added_arrival / .data$plays_arrival,
                   dropdownName = paste(.data$position, " ", .data$displayName, " (", .data$defendingTeam, ")", sep=""))
 
   summary_stats <- df %>%
     dplyr::group_by(position) %>%
-    dplyr::slice_max(.data$playsTarget, n=120) %>%
+    dplyr::slice_max(.data$plays_throw, n=120) %>%
     dplyr::summarise(meanCoverage = mean(regressedCoverage),
                      sdCoverage = sd(regressedCoverage),
                      meanDeterrence = mean(regressedDeterrence),
                      sdDeterrence = sd(regressedDeterrence),
-                     meanDrops = mean(regressedDrops),
-                     sdDrops = sd(regressedDrops))
+                     meanDropsThrow = mean(regressedDropsThrow, na.rm = T),
+                     sdDropsThrow = sd(regressedDropsThrow, na.rm = T),
+                     meanDropsArrival = mean(regressedDropsArrival, na.rm = T),
+                     sdDropsArrival = sd(regressedDropsArrival, na.rm = T),
+                     .groups = 'drop')
 
   df <- df %>%
-    dplyr::filter(.data$playsTarget > 50) %>%
     dplyr::inner_join(summary_stats, by="position") %>%
     dplyr::mutate(
       coverageZ = (regressedCoverage - meanCoverage) / sdCoverage,
       coverageGrade = 100 * pnorm(.data$coverageZ),
       deterrenceZ = (regressedDeterrence - meanDeterrence) / sdDeterrence,
       deterrenceGrade = 100 * pnorm(.data$deterrenceZ),
-      dropsZ = (regressedDrops - meanDrops) / sdDrops,
-      dropsGrade = 100 * pnorm(.data$dropsZ),
-      totalGrade = (coverageGrade + deterrenceGrade + dropsGrade) / 3
+      dropsThrowZ = (regressedDropsThrow - meanDropsThrow) / sdDropsThrow,
+      dropsThrowGrade = 100 * pnorm(.data$dropsThrowZ),
+      dropsArrivalZ = (regressedDropsArrival - meanDropsArrival) / sdDropsArrival,
+      dropsArrivalGrade = 100 * pnorm(.data$dropsArrivalZ),
+      totalGrade = (coverageGrade + deterrenceGrade + dropsThrowGrade + dropsArrivalGrade) / 4
     ) %>%
-    dplyr::select(-(meanCoverage:sdDrops))
+    dplyr::select(-(meanCoverage:sdDropsArrival))
 
   rm(summary_stats)
   return(df)
@@ -172,9 +187,10 @@ build_percentile_geom <- function(player_row){
   total_grade_geom <- build_rating_box(player_row %>% dplyr::pull(totalGrade), "Overall")
   coverage_grade_geom <- build_rating_box(player_row %>% dplyr::pull(coverageGrade), "Coverage")
   deterrence_grade_geom <- build_rating_box(player_row %>% dplyr::pull(deterrenceGrade), "Deterrence")
-  drops_grade_geom <- build_rating_box(player_row %>% dplyr::pull(dropsGrade), "Drops")
+  drops_arrival_grade_geom <- build_rating_box(player_row %>% dplyr::pull(dropsArrivalGrade), "Breakups")
+  drops_throw_grade_geom <- build_rating_box(player_row %>% dplyr::pull(dropsThrowGrade), "Closing")
 
-  return(total_grade_geom + coverage_grade_geom + deterrence_grade_geom + drops_grade_geom + plot_layout(ncol=1))
+  return(total_grade_geom + coverage_grade_geom + deterrence_grade_geom + drops_throw_grade_geom + drops_arrival_grade_geom + plot_layout(ncol=1))
 }
 
 #' build_rating_box function to create ggplot object given a grade
@@ -223,7 +239,7 @@ build_player_bio <- function(player_row) {
     # ggplot2::geom_text(ggplot2::aes(x = 1, y = 1, label = displayName), size=6) +
     # ggplot2::geom_text(ggplot2::aes(x = 1, y = 0.5, label = paste(round(playsTarget), " plays | ", games, " games", sep="")), size=6)
     ggplot2::geom_text(ggplot2::aes(x = 1, y = 1.3, label = paste(position, displayName)), size=8) +
-    ggplot2::geom_text(ggplot2::aes(x = 1, y = 0.7, label = paste(round(playsTarget), " plays | ", games, " games", sep="")), size=6)
+    ggplot2::geom_text(ggplot2::aes(x = 1, y = 0.7, label = paste(round(plays_throw), " plays | ", games, " games", sep="")), size=6)
 }
 
 #' build_player_radar
@@ -234,12 +250,12 @@ build_player_bio <- function(player_row) {
 build_player_radar <- function(df, player_id) {
   radar_geom <- df %>%
     dplyr::mutate_each(list(scales::rescale),
-                       c(.data$playsTarget, .data$averageSeperation, .data$wrStrength, .data$medianSpeed, .data$medianAccel)) %>%
+                       c(.data$plays_throw, .data$averageSeperation, .data$wrStrength, .data$medianSpeed, .data$medianAccel)) %>%
     dplyr::mutate(wrStrength = 1 - .data$wrStrength,
                   averageSeperation = 1 - .data$averageSeperation) %>%
     dplyr::filter(.data$nflId == player_id) %>%
     dplyr::select(.data$nflId,
-                  Plays = .data$playsTarget,
+                  Plays = .data$plays_throw,
                   Speed = .data$medianSpeed,
                   Accel = .data$medianAccel,
                   `Asmgt Diff` = .data$wrStrength,
