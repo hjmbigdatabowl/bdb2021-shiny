@@ -7,7 +7,8 @@ RUN Rscript -e "remotes::install_version('sodium', version = '1.1')" && \
   Rscript -e "remotes::install_github('hjmbigdatabowl/bdb2021')" && \
   Rscript -e "remotes::install_github('ricardo-bion/ggradar', dependencies = TRUE)" && \
   Rscript -e "remotes::install_version('cowplot', upgrade = 'never', version = '1.1.0')" && \
-  Rscript -e "remotes::install_version('magick', upgrade = 'never', version = '2.5.2')"
+  Rscript -e "remotes::install_version('magick', upgrade = 'never', version = '2.5.2')" && \
+  Rscipt -e "remotes::install_github('thomasp85/patchwork')"
 
 RUN mkdir /build_zone
 COPY . /build_zone
