@@ -167,11 +167,11 @@ build_player_card <- function(df, player_id) {
   team_logo <- get_team_logo(player_row %>% dplyr::pull(.data$defendingTeam))
 
   plot_layot <- "
-  DAAA#C
-  BBBBBC
-  BBBBBC
-  BBBBBC
-  BBBBBC
+  DAAACC
+  BBBBCC
+  BBBBCC
+  BBBBCC
+  BBBBCC
   "
 
   return(player_bio_geom
@@ -195,7 +195,18 @@ build_percentile_geom <- function(player_row){
   drops_arrival_grade_geom <- build_rating_box(player_row %>% dplyr::pull(dropsArrivalGrade), "Breakups")
   drops_throw_grade_geom <- build_rating_box(player_row %>% dplyr::pull(dropsThrowGrade), "Closing")
 
-  return(total_grade_geom + coverage_grade_geom + deterrence_grade_geom + drops_throw_grade_geom + drops_arrival_grade_geom + plot_layout(ncol=1))
+  plot_layot <- "
+  #AA#
+  BBCC
+  DDEE
+  "
+
+  return(total_grade_geom
+         + coverage_grade_geom
+         + deterrence_grade_geom
+         + drops_throw_grade_geom
+         + drops_arrival_grade_geom
+         + plot_layout(design = plot_layot))
 }
 
 #' build_rating_box function to create ggplot object given a grade
