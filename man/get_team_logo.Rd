@@ -4,7 +4,7 @@
 \alias{get_team_logo}
 \title{get_team_logo get logo from nflfastR}
 \usage{
-get_team_logo(team_abbr)
+get_team_logo(abbr)
 }
 \description{
 get_team_logo get logo from nflfastR

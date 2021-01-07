@@ -53,6 +53,7 @@ mod_player_card_server <- function(id){
     function(input, output, session){
       ns <- session$ns
       df <- load_player_card_data()
+      message('player card data loaded')
       shinyWidgets::updatePickerInput(session, "playerDropdown", choices = df$dropdownName, label = "Players")
 
       data <- reactiveValues()
@@ -63,7 +64,7 @@ mod_player_card_server <- function(id){
             if (is.na(input$playerDropdown)) {
               showNotification("You must select a player", duration = 5, type = "error")
             }
-            data[["playerId"]] <- df %>% dplyr::filter(.data$dropdownName == input$playerDropdown) %>% dplyr::pull(nflId)
+            data[["playerId"]] <- df %>% dplyr::filter(input$playerDropdown == .data$dropdownName) %>% dplyr::pull(nflId)
 
             plt <- build_player_card(df, data[["playerId"]])
             output$gg <- renderPlot(plt)
@@ -119,7 +120,6 @@ load_player_card_data <- function(){
 
   summary_stats <- df %>%
     dplyr::group_by(position) %>%
-    dplyr::slice_max(.data$plays_throw, n=120) %>%
     dplyr::summarise(meanCoverage = mean(regressedCoverage),
                      sdCoverage = sd(regressedCoverage),
                      meanDeterrence = mean(regressedDeterrence),
@@ -228,9 +228,9 @@ build_rating_box <- function(rating, label) {
 
 #' get_team_logo get logo from nflfastR
 #'
-get_team_logo <- function(team_abbr) {
+get_team_logo <- function(abbr) {
   team_logo <- nflfastR::teams_colors_logos %>%
-    dplyr::filter(.data$team_abbr == team_abbr) %>%
+    dplyr::filter(.data$team_abbr == abbr) %>%
     dplyr::pull(.data$team_logo_espn)
 
   logo <- cowplot::draw_image(team_logo)
