@@ -16,16 +16,6 @@ app_ui <- function(request) {
         direction = c("bottom", "top", "right", "left"),
         shinydashboard = FALSE
       ),
-
-      # App title
-      tabPanel(
-        "Throw Defending",
-        mod_catch_prob_ui("catch_prob_ui_1")
-      ),
-      tabPanel(
-        "Throw Deterrence",
-        ## add module here
-      ),
       tabPanel(
         "Player Cards",
         mod_player_card_ui("player_card_ui_1")

@@ -5,7 +5,6 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-  list(mod_catch_prob_server("catch_prob_ui_1"),
-       mod_player_card_server("player_card_ui_1"),
+  list(mod_player_card_server("player_card_ui_1"),
        mod_overall_rankings_server('overall_rankings_ui_1'))
 }
