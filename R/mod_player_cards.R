@@ -65,8 +65,11 @@ mod_player_card_server <- function(id){
               showNotification("You must select a player", duration = 5, type = "error")
             }
             data[["playerId"]] <- df %>% dplyr::filter(input$playerDropdown == .data$dropdownName) %>% dplyr::pull(nflId)
-
-            plt <- build_player_card(df, data[["playerId"]])
+            message(glue::glue("player card for {data[['playerId']]} rendering"))
+            plt <- withProgress(
+              message = 'Rendering Player Card...', {
+              build_player_card(df, data[["playerId"]])
+            })
             output$gg <- renderPlot(plt)
           },
           error = function(err) {

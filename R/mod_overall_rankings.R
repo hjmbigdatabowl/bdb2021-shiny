@@ -146,10 +146,14 @@ mod_overall_rankings_server <- function(id){
                   ggplot2::geom_jitter()
                 }
               }
-              plt <- ggplot2::ggplot(model_data_2[["data"]], ggplot2::aes_string(x = input$xaxis2, y = input$yaxis2, color = col)) +
-                ptype(input$plottype2) +
-                ggthemes::theme_fivethirtyeight() +
-                ggplot2::theme(axis.title = ggplot2::element_text())
+              plt <- withProgress(
+                message = 'Rendering plot...',
+                {
+                  ggplot2::ggplot(model_data_2[["data"]], ggplot2::aes_string(x = input$xaxis2, y = input$yaxis2, color = col)) +
+                  ptype(input$plottype2) +
+                  ggthemes::theme_fivethirtyeight() +
+                  ggplot2::theme(axis.title = ggplot2::element_text())
+                })
               message('got through plt')
               shinyjs::hide('tab')
               shinyjs::show('gg')
